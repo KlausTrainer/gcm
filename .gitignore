@@ -1,0 +1,16 @@
+/ebin
+/doc
+/_test
+/.eunit
+/docs
+.DS_Store
+/TEST-*.xml
+*.swp
+/deps
+/log
+/logs
+/priv/*.bitcask
+/test/*.bitcask
+*.beam
+*.plt
+erl_crash.dump
