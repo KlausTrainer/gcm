@@ -1,8 +1,19 @@
-{application, gcm,
- [{description, "An Erlang/OTP application for Google Cloud Messaging (GCM)"},
-  {vsn, "0.1.0"},
-  {modules, []},
-  {mod, {gcm_app, []}},
-  {registered, []},
-  {env, []},
-  {applications, [kernel, stdlib]}]}.
+{application, gcm, [
+    {description, "An Erlang/OTP application for Google Cloud Messaging (GCM)"},
+    {vsn, "0.1.0"},
+    {modules, []},
+    {mod, {gcm_app, []}},
+    {registered, []},
+    {env, []},
+    {applications, [
+        kernel,
+        stdlib,
+        crypto,
+        ranch,
+        cowboy,
+        bitcask,
+        ibrowse,
+        sasl,
+        lager
+    ]}
+]}.
