@@ -4,11 +4,8 @@ PROJECT = gcm
 
 PLT_APPS = crypto asn1 public_key ssl sasl
 
-### We somehow need this dialyzer option. Without it, dialyzer crashes
-### with the following error message:
-### `undefined parse transform 'lager_transform'`.
-DIALYZER_OPTS = -pa deps/lager/ebin
-###
+ERLC_OPTS = -pa $(DEPS_DIR)/lager/ebin +'{parse_transform, lager_transform}'
+DIALYZER_OPTS = -pa $(DEPS_DIR)/lager/ebin
 
 # dependencies
 
