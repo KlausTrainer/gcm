@@ -8,7 +8,7 @@
 -export([allowed_methods/2]).
 -export([content_types_accepted/2]).
 
--export([handle_request/2]).
+-export([accept_json/2]).
 -export([delete_resource/2]).
 
 -export([register/1, unregister/1, update_registration/2]).
@@ -25,7 +25,7 @@ allowed_methods(Req, State) ->
     {[<<"POST">>, <<"PUT">>, <<"DELETE">>], Req, State}.
 
 content_types_accepted(Req, State) ->
-    {[{{<<"application">>, <<"json">>, []}, handle_request}], Req, State}.
+    {[{{<<"application">>, <<"json">>, []}, accept_json}], Req, State}.
 
 -spec register(binary()) -> ok.
 register(RegId) ->
@@ -43,10 +43,10 @@ update_registration(OldRegId, NewRegId) ->
 
 %% internal API
 
--spec handle_request(cowboy_req:req(), undefined) -> {cowboy_req:req(), cowboy_req:req(), undefined}.
-handle_request(Req, undefined) ->
+-spec accept_json(cowboy_req:req(), undefined) -> {halt, cowboy_req:req(), undefined}.
+accept_json(Req, undefined) ->
     {ok, Body, _} = cowboy_req:body(Req),
-    {ok, Res} = case parse_req_body(Body) of
+    {ok, _Response} = case parse_req_body(Body) of
     {registration_id, RegId} ->
         ?MODULE:register(RegId),
         lager:info("registered: ~p", [RegId]),
@@ -54,11 +54,11 @@ handle_request(Req, undefined) ->
     error ->
         cowboy_req:reply(400, ?RESPONSE_HEADERS, <<"{\"error\":\"bad request\"}">>, Req)
     end,
-    {Res, Req, undefined}.
+    {halt, Req, undefined}.
 
--spec delete_resource(cowboy_req:req(), undefined) -> {cowboy_req:req(), cowboy_req:req(), undefined}.
+-spec delete_resource(cowboy_req:req(), undefined) -> {halt, cowboy_req:req(), undefined}.
 delete_resource(Req, undefined) ->
-    {ok, Res} = case cowboy_req:bindings(Req) of
+    {ok, _Response} = case cowboy_req:bindings(Req) of
     {[{registration_id, RegId}], _} ->
         case gcm_db:lookup(RegId) of
         {ok, _} ->
@@ -71,7 +71,7 @@ delete_resource(Req, undefined) ->
     _ ->
         cowboy_req:reply(400, ?RESPONSE_HEADERS, <<"{\"error\":\"missing registration_id\"}">>, Req)
     end,
-    {Res, Req, undefined}.
+    {halt, Req, undefined}.
 
 parse_req_body(Body) ->
     try
