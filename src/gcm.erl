@@ -8,6 +8,7 @@ start() ->
     ok = application:start(asn1),
     ok = application:start(public_key),
     ok = application:start(ssl),
+    ok = application:start(jiffy),
     ok = application:start(ibrowse),
     ok = application:start(ranch),
     ok = application:start(cowboy),
