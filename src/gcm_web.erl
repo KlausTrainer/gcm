@@ -8,12 +8,11 @@
 
 -spec start() -> {ok, pid()}.
 start() ->
-    {ok, Application} = application:get_application(),
-    PrivDir = code:priv_dir(Application),
-    Port = Application:get_app_env(port, 9443),
-    CaCertFile = Application:get_app_env(cacertfile, PrivDir ++ "/ssl/cowboy-ca.crt"),
-    CertFile = Application:get_app_env(certfile, PrivDir ++ "/ssl/server.crt"),
-    KeyFile = Application:get_app_env(keyfile, PrivDir ++ "/ssl/server.key"),
+    PrivDir = code:priv_dir(gcm),
+    Port = gcm:get_app_env(port, 9443),
+    CaCertFile = gcm:get_app_env(cacertfile, PrivDir ++ "/ssl/cowboy-ca.crt"),
+    CertFile = gcm:get_app_env(certfile, PrivDir ++ "/ssl/server.crt"),
+    KeyFile = gcm:get_app_env(keyfile, PrivDir ++ "/ssl/server.key"),
     Dispatch = cowboy_router:compile([
         {'_', [
             {"/registrations/[:registration_id]", gcm_registration_handler, []}

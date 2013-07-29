@@ -22,13 +22,13 @@
 %% external API
 
 start() ->
-    case api_key() of
+    case gcm:get_app_env(api_key) of
     undefined -> exit(no_api_key);
     ApiKey -> gen_server:start({local, ?MODULE}, ?MODULE, [ApiKey], [])
     end.
 
 start_link() ->
-    case api_key() of
+    case gcm:get_app_env(api_key) of
     undefined -> exit(no_api_key);
     ApiKey -> gen_server:start_link({local, ?MODULE}, ?MODULE, [ApiKey], [])
     end.
@@ -99,10 +99,6 @@ code_change(_OldVsn, State, _Extra) ->
 
 
 %% internal API
-
-api_key() ->
-    {ok, Application} = application:get_application(),
-    Application:get_app_env(api_key).
 
 build_gcm_request(Message, RegIds) ->
     jiffy:encode({[{<<"registration_ids">>, RegIds},

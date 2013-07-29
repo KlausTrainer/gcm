@@ -93,6 +93,5 @@ terminate(_Reason, State) ->
 %% internal API
 
 db_path() ->
-    {ok, Application} = application:get_application(),
-    PrivDir = code:priv_dir(Application),
-    Application:get_app_env(db_path, PrivDir ++ "/gcm_db").
+    PrivDir = code:priv_dir(gcm),
+    gcm:get_app_env(db_path, PrivDir ++ "/gcm_db").
