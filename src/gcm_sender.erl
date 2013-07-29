@@ -5,7 +5,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start/1, start_link/1, stop/0, push/2, push_broadcast/1]).
+-export([start/0, start_link/0, stop/0, push/2, push_broadcast/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -21,11 +21,17 @@
 
 %% external API
 
-start(ApiKey) ->
-    gen_server:start({local, ?MODULE}, ?MODULE, [ApiKey], []).
+start() ->
+    case api_key() of
+    undefined -> exit(no_api_key);
+    ApiKey -> gen_server:start({local, ?MODULE}, ?MODULE, [ApiKey], [])
+    end.
 
-start_link(ApiKey) ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [ApiKey], []).
+start_link() ->
+    case api_key() of
+    undefined -> exit(no_api_key);
+    ApiKey -> gen_server:start_link({local, ?MODULE}, ?MODULE, [ApiKey], [])
+    end.
 
 stop() ->
     gen_server:call(?MODULE, stop).
@@ -93,6 +99,10 @@ code_change(_OldVsn, State, _Extra) ->
 
 
 %% internal API
+
+api_key() ->
+    {ok, Application} = application:get_application(),
+    Application:get_app_env(api_key).
 
 build_gcm_request(Message, RegIds) ->
     jiffy:encode({[{<<"registration_ids">>, RegIds},

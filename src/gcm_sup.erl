@@ -8,7 +8,6 @@
 %% Supervisor callbacks
 -export([init/1]).
 
--include("gcm.hrl").
 
 %% ===================================================================
 %% API functions
@@ -26,17 +25,17 @@ init([]) ->
     Processes = [
         {
             gcm_db,
-            {gcm_db, start_link, [?GCM_DB_PATH]},
+            {gcm_db, start_link, []},
             permanent, 2000, worker, dynamic
         },
         {
             gcm_web,
-            {gcm_web, start, [?GCM_PORT]},
+            {gcm_web, start, []},
             permanent, 2000, worker, dynamic
         },
         {
             gcm_sender,
-            {gcm_sender, start_link, [?GCM_AUTH_TOKEN]},
+            {gcm_sender, start_link, []},
             permanent, 2000, worker, dynamic
         }
     ],
