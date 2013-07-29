@@ -94,4 +94,4 @@ terminate(_Reason, State) ->
 
 db_path() ->
     PrivDir = code:priv_dir(gcm),
-    gcm:get_app_env(db_path, PrivDir ++ "/gcm_db").
+    gcm:get_app_env(db_path, PrivDir ++ "/gcm_db.bitcask").
