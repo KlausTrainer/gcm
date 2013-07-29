@@ -43,8 +43,8 @@ unbroken_cipher_suites() ->
     case proplists:get_value(ssl_app, ssl:versions()) of
     "5.3" ->
         lists:filter(fun(Suite) ->
-        string:left(atom_to_list(element(1, Suite)), 4) =/= "ecdh"
-    end, ssl:cipher_suites());
+            string:left(atom_to_list(element(1, Suite)), 4) =/= "ecdh"
+        end, ssl:cipher_suites());
     _ ->
         ssl:cipher_suites()
     end.
