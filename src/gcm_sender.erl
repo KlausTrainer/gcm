@@ -36,6 +36,7 @@ start_link() ->
 stop() ->
     gen_server:call(?MODULE, stop).
 
+-spec push([binary()], binary()) -> ok.
 push(RegIds, Message) ->
     MyRegIds = lists:filter(
                    fun(RegId) ->
@@ -46,6 +47,7 @@ push(RegIds, Message) ->
                    end, RegIds),
     gen_server:cast(?MODULE, {send, MyRegIds, Message}).
 
+-spec push_broadcast(binary()) -> ok.
 push_broadcast(Message) ->
     gen_server:cast(?MODULE, {send, gcm_db:list_keys(), Message}).
 
