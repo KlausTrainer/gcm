@@ -8,7 +8,7 @@
 -export([allowed_methods/2]).
 -export([content_types_accepted/2]).
 
--export([accept_json/2]).
+-export([create_resource/2]).
 -export([delete_resource/2]).
 
 -export([register/1, unregister/1, update_registration/2]).
@@ -22,10 +22,10 @@ init({ssl, http}, _Req, _Opts) ->
 	{upgrade, protocol, cowboy_rest}.
 
 allowed_methods(Req, State) ->
-    {[<<"POST">>, <<"PUT">>, <<"DELETE">>], Req, State}.
+    {[<<"PUT">>, <<"DELETE">>], Req, State}.
 
 content_types_accepted(Req, State) ->
-    {[{{<<"application">>, <<"json">>, []}, accept_json}], Req, State}.
+    {[{'*', create_resource}], Req, State}.
 
 -spec register(binary()) -> ok.
 register(RegId) ->
@@ -43,15 +43,14 @@ update_registration(OldRegId, NewRegId) ->
 
 %% internal API
 
--spec accept_json(cowboy_req:req(), undefined) -> {halt, cowboy_req:req(), undefined}.
-accept_json(Req, undefined) ->
-    {ok, Body, _} = cowboy_req:body(Req),
-    {ok, _Response} = case parse_req_body(Body) of
-    {registration_id, RegId} ->
+-spec create_resource(cowboy_req:req(), undefined) -> {halt, cowboy_req:req(), undefined}.
+create_resource(Req, undefined) ->
+    {ok, _Response} = case cowboy_req:bindings(Req) of
+    {[{registration_id, RegId}], _} ->
         ?MODULE:register(RegId),
         lager:info("registered: ~p", [RegId]),
         cowboy_req:reply(200, ?RESPONSE_HEADERS, <<"{}">>, Req);
-    error ->
+    _ ->
         cowboy_req:reply(400, ?RESPONSE_HEADERS, <<"{\"error\":\"bad request\"}">>, Req)
     end,
     {halt, Req, undefined}.
@@ -72,18 +71,3 @@ delete_resource(Req, undefined) ->
         cowboy_req:reply(400, ?RESPONSE_HEADERS, <<"{\"error\":\"missing registration_id\"}">>, Req)
     end,
     {halt, Req, undefined}.
-
-parse_req_body(Body) ->
-    try
-        case jiffy:decode(Body) of
-        {Props} ->
-            case proplists:get_value(<<"registration_id">>, Props) of
-            undefined -> error;
-            RegId -> {registration_id, RegId}
-            end;
-        _ ->
-            error
-        end
-    catch throw:_ ->
-        error
-    end.
