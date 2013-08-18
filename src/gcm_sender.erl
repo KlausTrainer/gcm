@@ -11,7 +11,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
 	     terminate/2, code_change/3]).
 
--define(BASE_URL, "http://android.googleapis.com/gcm/send").
+-define(BASE_URL, "https://android.googleapis.com/gcm/send").
 
 -record(state, {
     key :: binary(),
