@@ -5,7 +5,7 @@
 
 %% API
 -export([start/0, start_link/0, stop/0]).
--export([list_keys/0, lookup/1, delete/1, store/2]).
+-export([fold/2, lookup/1, delete/1, store/2]).
 
 %% gen_server callbacks
 -export([
@@ -31,9 +31,10 @@ stop() ->
     catch gen_server:call(?MODULE, stop),
     ok.
 
--spec list_keys() -> [binary()].
-list_keys() ->
-    gen_server:call(?MODULE, list_keys, infinity).
+-spec fold(fun((binary(), binary(), term()) -> term()),
+           term()) -> term() | {error, term()}.
+fold(Fun, Acc0) ->
+    gen_server:call(?MODULE, {fold, Fun, Acc0}, infinity).
 
 -spec lookup(binary()) -> not_found | {ok, binary()}.
 lookup(RegId) when is_binary(RegId) ->
@@ -57,8 +58,8 @@ init([DbPath]) ->
     {ok, bitcask:open(DbPath, [read_write, sync_on_put])}.
 
 
-handle_call(list_keys, _From, State) ->
-    {reply, bitcask:list_keys(State), State};
+handle_call({fold, Fun, Acc0}, _From, State) ->
+    {reply, bitcask:fold(State, Fun, Acc0), State};
 
 handle_call({lookup, RegId}, _From, State) ->
     {reply, bitcask:get(State, RegId), State};

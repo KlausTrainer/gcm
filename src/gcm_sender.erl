@@ -11,12 +11,18 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
 	     terminate/2, code_change/3]).
 
+-export_type([registration_info/0]).
+
 -define(BASE_URL, "https://android.googleapis.com/gcm/send").
 
 -record(state, {
     key :: binary(),
     retry_after :: non_neg_integer()
 }).
+
+-type registration_info() :: [{not_found, binary()} |
+                              {unregistered, binary()} |
+                              {updated, binary(), binary()}].
 
 
 %% external API
@@ -36,20 +42,38 @@ start_link() ->
 stop() ->
     gen_server:call(?MODULE, stop).
 
--spec push([binary()], binary()) -> ok.
+-spec push([binary()], binary()) -> {ok, registration_info()}.
 push(RegIds, Message) ->
-    MyRegIds = lists:filter(
-                   fun(RegId) ->
-                       case gcm_db:lookup(RegId) of
-                       not_found -> false;
-                       _ -> true
-                       end
-                   end, RegIds),
-    gen_server:cast(?MODULE, {send, MyRegIds, Message}).
+    {ActiveRegIds, Info} = lists:foldl(
+        fun(RegId, {ActiveRegIds, Info}) ->
+            case gcm_db:lookup(RegId) of
+            not_found ->
+                {ActiveRegIds, [{not_found, RegId} | Info]};
+            {ok, <<>>} ->
+                {[RegId | ActiveRegIds], Info};
+            {ok, Data} ->
+                case binary_to_term(Data, [safe]) of
+                unregistered ->
+                    {ActiveRegIds, [{unregistered, RegId} | Info]};
+                {updated, NewRegId} when is_binary(NewRegId) ->
+                    {ActiveRegIds, [{updated, RegId, NewRegId} | Info]}
+                end
+            end
+        end, {[], []}, RegIds),
+    ok = gen_server:cast(?MODULE, {send, ActiveRegIds, Message}),
+    {ok, Info}.
 
 -spec push_broadcast(binary()) -> ok.
 push_broadcast(Message) ->
-    gen_server:cast(?MODULE, {send, gcm_db:list_keys(), Message}).
+    ActiveRegIdFun =
+        fun(RegId, Data, Acc0) ->
+            case Data of
+            <<>> -> [RegId | Acc0];
+            _ -> Acc0
+            end
+        end,
+    ActiveRegIds = gcm_db:fold(ActiveRegIdFun, []),
+    gen_server:cast(?MODULE, {send, ActiveRegIds, Message}).
 
 
 %% gen_server callbacks

@@ -33,12 +33,12 @@ register(RegId) ->
 
 -spec unregister(binary()) -> ok.
 unregister(RegId) ->
-    ok = gcm_db:delete(RegId).
+    ok = gcm_db:store(RegId, term_to_binary(unregistered)).
 
 -spec update_registration(binary(), binary()) -> ok.
 update_registration(OldRegId, NewRegId) ->
-    ok = gcm_db:delete(OldRegId),
-    ok = gcm_db:store(NewRegId, <<>>).
+    ok = gcm_db:store(NewRegId, <<>>),
+    ok = gcm_db:store(OldRegId, term_to_binary({updated, NewRegId})).
 
 
 %% internal API
